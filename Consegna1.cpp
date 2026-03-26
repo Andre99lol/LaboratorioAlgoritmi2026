@@ -44,36 +44,240 @@ void swap(int &a, int &b) {
     ct_swap++;
 }
 
-int partition(int *A, int p, int r) {
-
-    /// copia valori delle due meta p..q e q+1..r
-    ct_read++;
-    int x = A[r];
-    int i = p - 1;
-
-    for (int j = p; j < r; j++) {
-        ct_cmp++;
+// Funzione per mantenere la proprietà dell'heap
+void heapify(int *A, int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+    
+    ct_cmp++;
+    if (left < n) {
         ct_read++;
-        if (A[j] <= x) {
-            i++;
-            ct_read++;
-            ct_read++;
-            swap(A[i], A[j]);
+        if (A[left] > A[largest]) {
+            largest = left;
         }
     }
-    ct_read++;
-    ct_read++;
-    swap(A[i + 1], A[r]);
-
-    return i + 1;
+    
+    ct_cmp++;
+    if (right < n) {
+        ct_read++;
+        if (A[right] > A[largest]) {
+            largest = right;
+        }
+    }
+    
+    if (largest != i) {
+        ct_read++;
+        ct_read++;
+        swap(A[i], A[largest]);
+        heapify(A, n, largest);
+    }
 }
 
-void quick_sort(int *A, int p, int r) {
-    /// gli array L e R sono utilizzati come appoggio per copiare i valori: evita le allocazioni nella fase di merge
-    if (p < r) {
-        int q = partition(A, p, r);
-        quick_sort(A, p, q - 1);
-        quick_sort(A, q + 1, r);
+// Heap Sort Algorithm
+void heap_sort(int *A, int n) {
+    // Costruzione dell'heap (riorganizza l'array)
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        heapify(A, n, i);
+    }
+    
+    // Estrazione elementi dall'heap uno per uno
+    for (int i = n - 1; i > 0; i--) {
+        ct_read++;
+        ct_read++;
+        swap(A[0], A[i]);  // Sposta la radice corrente alla fine
+        heapify(A, i, 0);  // Chiamata heapify sull'heap ridotto
+    }
+}
+
+// Struttura per i Leonardo numbers necessari per Smooth Sort
+int leonardo(int k) {
+    if (k < 2) return 1;
+    return leonardo(k - 1) + leonardo(k - 2) + 1;
+}
+
+// Funzione per il merging dei subtrees in Smooth Sort
+void sift(int *A, int start, int end) {
+    int root = start;
+    int child;
+    
+    while (root <= end) {
+        child = root * 2 + 1;
+        if (child > end) break;
+        
+        ct_cmp++;
+        if (child + 1 <= end) {
+            ct_read++;
+            ct_read++;
+            if (A[child] < A[child + 1]) {
+                child++;
+            }
+        }
+        
+        ct_cmp++;
+        ct_read++;
+        if (A[root] < A[child]) {
+            ct_read++;
+            ct_read++;
+            swap(A[root], A[child]);
+            root = child;
+        } else {
+            break;
+        }
+    }
+}
+
+// Funzione per ripristinare la proprietà di heap in Smooth Sort
+void trinkle(int *A, int p, int r, int lp, int rp) {
+    while (lp > 0) {
+        // Trova la posizione appropriata
+        int q = p - leonardo(lp);
+        int r1 = rp - 1;
+        
+        if (r1 >= 0 && q >= 0) {
+            ct_cmp++;
+            ct_read++;
+            if (A[q] > A[p - 1]) {
+                ct_read++;
+                ct_read++;
+                swap(A[q], A[p - 1]);
+                p = q + 1;
+                rp = r1;
+                lp--;
+                continue;
+            }
+        }
+        
+        if (r1 >= 0) {
+            ct_cmp++;
+            ct_read++;
+            if (A[p - 1] < A[p + leonardo(lp - 1) - 1]) {
+                // Caso speciale
+                int t = lp;
+                while (t > 0) {
+                    int idx = p + leonardo(t - 1) - 1;
+                    ct_cmp++;
+                    ct_read++;
+                    if (A[p - 1] < A[idx]) {
+                        ct_read++;
+                        ct_read++;
+                        swap(A[p - 1], A[idx]);
+                        break;
+                    }
+                    t--;
+                }
+                break;
+            }
+        }
+        
+        // Rotazione
+        if (r1 >= 0) {
+            ct_read++;
+            ct_read++;
+            swap(A[p - 1], A[p + leonardo(r1) - 1]);
+            p = p + leonardo(r1);
+            rp = r1 - 1;
+        } else {
+            break;
+        }
+    }
+}
+
+// Funzione principale Smooth Sort
+void smooth_sort(int *A, int n) {
+    int p = 1;  // Indice corrente
+    int lp = 1; // Indice Leonardo corrente
+    int rp = 0; // Indice rimanente
+    
+    // Fase di costruzione
+    while (p < n) {
+        if ((lp & 1) == 1) {  // lp è dispari
+            // Caso di fusione
+            if (p + leonardo(lp + 1) <= n) {
+                rp = lp;
+                lp++;
+                continue;
+            }
+        }
+        
+        // Inserimento di un nuovo elemento
+        if (lp > 1) {
+            int idx = p + leonardo(lp - 2) - 1;
+            ct_cmp++;
+            ct_read++;
+            if (idx < n && A[p - 1] < A[idx]) {
+                ct_read++;
+                ct_read++;
+                swap(A[p - 1], A[idx]);
+            }
+        }
+        
+        p++;
+        
+        // Aggiornamento dei Leonardo numbers
+        if (lp > 1) {
+            int temp = lp - 2;
+            while (temp > 0 && rp >= 0) {
+                lp = temp;
+                temp--;
+            }
+        }
+        
+        if (lp == 1) {
+            lp = 2;
+            rp = 1;
+        } else {
+            lp--;
+            rp = 0;
+        }
+    }
+    
+    // Fase di estrazione
+    while (p > 0) {
+        p--;
+        
+        if (lp == 1) {
+            // Caso semplice: rimuovi elemento
+            lp = 2;
+            rp = 1;
+        } else if (lp == 2) {
+            // Caso di fusione
+            lp = 1;
+            rp = 0;
+        } else {
+            // Caso complesso: decomposizione
+            int t = lp - 2;
+            if (rp >= 0) {
+                int idx1 = p + leonardo(t) - 1;
+                int idx2 = p + leonardo(t - 1) - 1;
+                
+                if (idx1 < n && idx2 < n) {
+                    ct_cmp++;
+                    ct_read++;
+                    if (A[idx1] < A[idx2]) {
+                        ct_read++;
+                        ct_read++;
+                        swap(A[idx1], A[idx2]);
+                    }
+                }
+            }
+            
+            rp = t;
+            lp = t + 1;
+            
+            // Ripristina la proprietà
+            if (rp >= 0) {
+                int idx = p + leonardo(rp) - 1;
+                if (idx < n) {
+                    sift(A, p, idx);
+                }
+            }
+        }
+        
+        // Trinkle per mantenere l'ordine
+        if (p > 0) {
+            trinkle(A, p, n - 1, lp, rp);
+        }
     }
 }
 
@@ -99,67 +303,6 @@ int parse_cmd(int argc, char **argv) {
     return 0;
 }
 
-int min_element(int *A, int n) {
-    int min = A[0];
-    for (int i = 1; i < n; i++) {
-        ct_cmp++;
-        ct_read++;
-        if (A[i] < min) {
-            min = A[i];
-        }
-    }
-    return min;
-}
-
-int max_element(int *A, int n) {
-    int max = A[0];
-    for (int i = 1; i < n; i++) {
-        ct_cmp++;
-        ct_read++;
-        if (A[i] > max) {
-            max = A[i];
-        }
-    }
-    return max;
-}
-
-
-int occorrences(int *A, int n, int value) {
-    int count = 0;
-    for (int i = 0; i < n; i++) {
-        ct_cmp++;
-        ct_read++;
-        if (A[i] == value) {
-            count++;
-        }
-    }
-    return count;
-}
-
-void pigeonholesort(int *A, int n) {
-    /// algoritmo di sorting da implementare
-    // n = dimensione dell'array da ordinare
-    int min = min_element(A, n);
-    int max = max_element(A, n); 
-    int range = max - min + 1;  
-    int *holes = new int[range]();
-    for(int i = 0; i < range; i++) {
-        ct_read++;
-        holes[i] = 0;
-    }
-    for(int i = 0; i < n; i++) {
-        ct_read++;
-        holes[A[i] - min]++;
-
-        for(int i = 0; i < n; i++) {
-            ct_read++;
-            holes[A[i] - min]++;
-        }
-    }
-
-    
-}
-
 int main(int argc, char **argv) {
     int i, test;
     int *A;
@@ -173,29 +316,16 @@ int main(int argc, char **argv) {
 
     n = max_dim;
 
-    // //creazione file input: NON USARE PIU' --> il file data.csv ufficiale è stato allegato, per permettere confronti equivalenti
-    // srand((unsigned)time(NULL));
-    //  FILE *f = fopen("data.csv", "w+");
-    //  int size=100;
-    //  for (int j = 0; j < size; j++) {
-    //      for (int i = 0; i < n; i++) {
-    //          int v = 0;             
-    //         //  v=(int)(100000*exp(-(0.0+i-n/2)*(0.0+i-n/2)/n/n*64));
-    //         //  v=(int)(5000*(1+sin(3.1415*(i/(n/2.0)))));
-    //          v=(int)(10000*sin(3.1415*(((int)(i/30))*30/(n+0.0))));
-    //          v+=rand()%(3+(int)(2*n*pow(((i+0.0)/n),2)));
-    //          fprintf(f, "%d,", v);
-    //      }
-    //      fprintf(f, "\n");
-    //  }
-    //  fclose(f);
-
     ifstream input_data;
     input_data.open("data.csv");
 
     int read_min = -1;
     int read_max = -1;
     long read_avg = 0;
+    
+    // Scegli quale algoritmo utilizzare
+    // 0: quick_sort, 1: heap_sort, 2: smooth_sort
+    int algorithm = 2; // Modifica questo valore per testare diversi algoritmi
 
     //// lancio ntests volte per coprire diversi casi di input random
     for (test = 0; test < ntests; test++) {
@@ -217,7 +347,14 @@ int main(int argc, char **argv) {
         ct_read = 0;
 
         /// algoritmo di sorting
-        quick_sort(A, 0, n - 1);
+        switch(algorithm) {
+            case 0:
+                smooth_sort(A, n);
+                break;
+            case 1:
+                heap_sort(A, n);
+                break;
+        }
 
         if (details) {
             printf("Output:\n");
