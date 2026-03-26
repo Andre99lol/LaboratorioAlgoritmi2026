@@ -44,31 +44,33 @@ void swap(int &a, int &b) {
     ct_swap++;
 }
 
+/// Algoritmo di sorting: Heap Sort
+
 // Funzione per mantenere la proprietà dell'heap
 void heapify(int *A, int n, int i) {
     int largest = i;
     int left = 2 * i + 1;
     int right = 2 * i + 2;
     
-    ct_cmp++;
     if (left < n) {
-        ct_read++;
+        ct_cmp++;
+        ct_read++;  // Accesso a A[left]
         if (A[left] > A[largest]) {
             largest = left;
         }
     }
     
-    ct_cmp++;
     if (right < n) {
-        ct_read++;
+        ct_cmp++;
+        ct_read++;  // Accesso a A[right]
         if (A[right] > A[largest]) {
             largest = right;
         }
     }
     
     if (largest != i) {
-        ct_read++;
-        ct_read++;
+        ct_read++;  // Accesso a A[i] per lo swap
+        ct_read++;  // Accesso a A[largest] per lo swap
         swap(A[i], A[largest]);
         heapify(A, n, largest);
     }
@@ -83,12 +85,14 @@ void heap_sort(int *A, int n) {
     
     // Estrazione elementi dall'heap uno per uno
     for (int i = n - 1; i > 0; i--) {
-        ct_read++;
-        ct_read++;
+        ct_read++;  // Accesso a A[0] per lo swap
+        ct_read++;  // Accesso a A[i] per lo swap
         swap(A[0], A[i]);  // Sposta la radice corrente alla fine
         heapify(A, i, 0);  // Chiamata heapify sull'heap ridotto
     }
 }
+
+/// Algoritmo di sorting: Smooth Sort
 
 // Struttura per i Leonardo numbers necessari per Smooth Sort
 int leonardo(int k) {
@@ -105,20 +109,20 @@ void sift(int *A, int start, int end) {
         child = root * 2 + 1;
         if (child > end) break;
         
-        ct_cmp++;
         if (child + 1 <= end) {
-            ct_read++;
-            ct_read++;
+            ct_cmp++;
+            ct_read++;  // Accesso a A[child]
+            ct_read++;  // Accesso a A[child + 1]
             if (A[child] < A[child + 1]) {
                 child++;
             }
         }
         
         ct_cmp++;
-        ct_read++;
+        ct_read++;  // Accesso a A[root]
         if (A[root] < A[child]) {
-            ct_read++;
-            ct_read++;
+            ct_read++;  // Accesso a A[root] per lo swap
+            ct_read++;  // Accesso a A[child] per lo swap
             swap(A[root], A[child]);
             root = child;
         } else {
@@ -136,10 +140,10 @@ void trinkle(int *A, int p, int r, int lp, int rp) {
         
         if (r1 >= 0 && q >= 0) {
             ct_cmp++;
-            ct_read++;
+            ct_read++;  // Accesso a A[q]
             if (A[q] > A[p - 1]) {
-                ct_read++;
-                ct_read++;
+                ct_read++;  // Accesso a A[q] per lo swap
+                ct_read++;  // Accesso a A[p-1] per lo swap
                 swap(A[q], A[p - 1]);
                 p = q + 1;
                 rp = r1;
@@ -150,17 +154,18 @@ void trinkle(int *A, int p, int r, int lp, int rp) {
         
         if (r1 >= 0) {
             ct_cmp++;
-            ct_read++;
+            ct_read++;  // Accesso a A[p-1]
             if (A[p - 1] < A[p + leonardo(lp - 1) - 1]) {
                 // Caso speciale
                 int t = lp;
                 while (t > 0) {
                     int idx = p + leonardo(t - 1) - 1;
                     ct_cmp++;
-                    ct_read++;
+                    ct_read++;  // Accesso a A[p-1]
+                    ct_read++;  // Accesso a A[idx]
                     if (A[p - 1] < A[idx]) {
-                        ct_read++;
-                        ct_read++;
+                        ct_read++;  // Accesso a A[p-1] per lo swap
+                        ct_read++;  // Accesso a A[idx] per lo swap
                         swap(A[p - 1], A[idx]);
                         break;
                     }
@@ -172,8 +177,8 @@ void trinkle(int *A, int p, int r, int lp, int rp) {
         
         // Rotazione
         if (r1 >= 0) {
-            ct_read++;
-            ct_read++;
+            ct_read++;  // Accesso a A[p-1] per lo swap
+            ct_read++;  // Accesso a A[p + leonardo(r1) - 1] per lo swap
             swap(A[p - 1], A[p + leonardo(r1) - 1]);
             p = p + leonardo(r1);
             rp = r1 - 1;
@@ -203,12 +208,15 @@ void smooth_sort(int *A, int n) {
         // Inserimento di un nuovo elemento
         if (lp > 1) {
             int idx = p + leonardo(lp - 2) - 1;
-            ct_cmp++;
-            ct_read++;
-            if (idx < n && A[p - 1] < A[idx]) {
-                ct_read++;
-                ct_read++;
-                swap(A[p - 1], A[idx]);
+            if (idx < n) {
+                ct_cmp++;
+                ct_read++;  // Accesso a A[p-1]
+                ct_read++;  // Accesso a A[idx]
+                if (A[p - 1] < A[idx]) {
+                    ct_read++;  // Accesso a A[p-1] per lo swap
+                    ct_read++;  // Accesso a A[idx] per lo swap
+                    swap(A[p - 1], A[idx]);
+                }
             }
         }
         
@@ -253,10 +261,11 @@ void smooth_sort(int *A, int n) {
                 
                 if (idx1 < n && idx2 < n) {
                     ct_cmp++;
-                    ct_read++;
+                    ct_read++;  // Accesso a A[idx1]
+                    ct_read++;  // Accesso a A[idx2]
                     if (A[idx1] < A[idx2]) {
-                        ct_read++;
-                        ct_read++;
+                        ct_read++;  // Accesso a A[idx1] per lo swap
+                        ct_read++;  // Accesso a A[idx2] per lo swap
                         swap(A[idx1], A[idx2]);
                     }
                 }
@@ -306,7 +315,6 @@ int parse_cmd(int argc, char **argv) {
 int main(int argc, char **argv) {
     int i, test;
     int *A;
-    int *B; /// buffer per visualizzazione algoritmo
 
     if (parse_cmd(argc, argv))
         return 1;
@@ -324,8 +332,8 @@ int main(int argc, char **argv) {
     long read_avg = 0;
     
     // Scegli quale algoritmo utilizzare
-    // 0: quick_sort, 1: heap_sort, 2: smooth_sort
-    int algorithm = 2; // Modifica questo valore per testare diversi algoritmi
+    // 0: heap_sort, 1: smooth_sort
+    int algorithm = 0; // Modifica questo valore per testare diversi algoritmi
 
     //// lancio ntests volte per coprire diversi casi di input random
     for (test = 0; test < ntests; test++) {
@@ -347,13 +355,10 @@ int main(int argc, char **argv) {
         ct_read = 0;
 
         /// algoritmo di sorting
-        switch(algorithm) {
-            case 0:
-                smooth_sort(A, n);
-                break;
-            case 1:
-                heap_sort(A, n);
-                break;
+        if (algorithm == 0) {
+            heap_sort(A, n);
+        } else {
+            smooth_sort(A, n);
         }
 
         if (details) {
